@@ -1,14 +1,10 @@
-import {
-  BrowserMessageReader,
-  BrowserMessageWriter,
-  createConnection,
-} from 'vscode-languageserver/browser';
-import { CedarSchemaLSP } from '../lsp/cedar-schema-lsp';
+import { BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageserver-protocol/browser';
+import { createConnection } from 'vscode-languageserver/browser';
 import { initCedarWasm } from '../lsp/wasm-loader';
+import { CedarSchemaLSP } from '../lsp/cedar-schema-lsp';
 
-const sw = self as any;
-const reader = new BrowserMessageReader(sw);
-const writer = new BrowserMessageWriter(sw);
+const reader = new BrowserMessageReader(self as any);
+const writer = new BrowserMessageWriter(self as any);
 const connection = createConnection(reader, writer);
 
 const lsp = new CedarSchemaLSP(connection);

@@ -1,2 +1,10 @@
-export const VERSION = '0.1.0';
+export { CedarPolicyEditor } from './components/CedarPolicyEditor';
+export { CedarSchemaEditor } from './components/CedarSchemaEditor';
+export { CedarJsonEditor } from './components/CedarJsonEditor';
+export { useCedar } from './hooks/useCedar';
+export { registerCedarLanguages } from './languages/register';
 export type { CedarEditorDiagnostic } from './types';
+export type { CedarPolicyEditorProps } from './components/CedarPolicyEditor';
+export type { CedarSchemaEditorProps } from './components/CedarSchemaEditor';
+export type { CedarJsonEditorProps } from './components/CedarJsonEditor';
+export const VERSION = '0.1.0';
