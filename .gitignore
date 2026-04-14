@@ -1,0 +1,5 @@
+node_modules
+dist
+.vite
+*.wasm
+.DS_Store
