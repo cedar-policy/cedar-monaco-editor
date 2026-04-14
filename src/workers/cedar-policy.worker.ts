@@ -7,10 +7,8 @@ const reader = new BrowserMessageReader(self as any);
 const writer = new BrowserMessageWriter(self as any);
 const connection = createConnection(reader, writer);
 
+const wasmPromise = initCedarWasm();
 const lsp = new CedarPolicyLSP(connection);
-
-initCedarWasm().then((cedarWasm) => {
-  lsp.init(cedarWasm);
-  lsp.setup();
-  connection.listen();
-});
+lsp.initAsync(wasmPromise);
+lsp.setup();
+connection.listen();

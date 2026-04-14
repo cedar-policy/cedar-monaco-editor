@@ -8,6 +8,7 @@ export function useJsonWorker(workerUrl: URL) {
   const idRef = useRef(0);
   const pendingRef = useRef<Map<number, (diags: CedarEditorDiagnostic[]) => void>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevResolveRef = useRef<((value: CedarEditorDiagnostic[]) => void) | null>(null);
 
   useEffect(() => {
     const worker = new Worker(workerUrl, { type: 'module' });
@@ -32,6 +33,10 @@ export function useJsonWorker(workerUrl: URL) {
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (prevResolveRef.current) {
+        prevResolveRef.current([]);
+        prevResolveRef.current = null;
+      }
       worker.terminate();
       workerRef.current = null;
       pendingRef.current.clear();
@@ -54,8 +59,15 @@ export function useJsonWorker(workerUrl: URL) {
   const validate = useCallback(
     (mode: ValidateRequest['mode'], content: string, schema?: string, action?: { type: string; id: string }): Promise<CedarEditorDiagnostic[]> => {
       return new Promise((resolve) => {
+        // Resolve previous pending promise with empty array
+        if (prevResolveRef.current) {
+          prevResolveRef.current([]);
+        }
+        prevResolveRef.current = resolve;
+
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
+          prevResolveRef.current = null;
           validateImmediate(mode, content, schema, action).then(resolve);
         }, 300);
       });

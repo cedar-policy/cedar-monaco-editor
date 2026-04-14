@@ -23,11 +23,18 @@ export class CedarPolicyLSP {
   private allowTemplates = false;
   private allowMultiplePolicies = false;
   private cedarWasm!: CedarWasmModule;
+  private wasmPromise!: Promise<CedarWasmModule>;
+  private documents: Map<string, string> = new Map();
 
   constructor(private connection: Connection) {}
 
   init(cedarWasm: CedarWasmModule): void {
     this.cedarWasm = cedarWasm;
+  }
+
+  initAsync(wasmPromise: Promise<CedarWasmModule>): void {
+    this.wasmPromise = wasmPromise;
+    wasmPromise.then((wasm) => { this.cedarWasm = wasm; });
   }
 
   setup(): void {
@@ -40,23 +47,27 @@ export class CedarPolicyLSP {
     }));
 
     this.connection.onDidOpenTextDocument((params) => {
+      this.documents.set(params.textDocument.uri, params.textDocument.text);
       this.validateDocument(params.textDocument.uri, params.textDocument.text);
     });
 
     this.connection.onDidChangeTextDocument((params) => {
       if (params.contentChanges.length > 0) {
         const text = params.contentChanges[params.contentChanges.length - 1].text;
+        this.documents.set(params.textDocument.uri, text);
         this.validateDocument(params.textDocument.uri, text);
       }
     });
 
     this.connection.onCompletion(() => this.getCompletions());
 
-    this.connection.onDocumentFormatting((params) => {
+    this.connection.onDocumentFormatting(async (params) => {
       // Full sync means we need to get text from the last known state;
       // the formatting request doesn't include document text, so we
       // return empty if we can't format. The caller should track text.
-      return [];
+      const text = this.documents.get(params.textDocument.uri);
+      if (!text) return [];
+      return this.formatDocument(text);
     });
 
     this.connection.onNotification('cedar/updateSchema', (params: { schema: string }) => {
@@ -73,7 +84,8 @@ export class CedarPolicyLSP {
     );
   }
 
-  validateDocument(uri: string, text: string): void {
+  async validateDocument(uri: string, text: string): Promise<void> {
+    if (this.wasmPromise) await this.wasmPromise;
     const result = this.cedarWasm.checkParsePolicySet({
       staticPolicies: text,
     });
@@ -85,7 +97,8 @@ export class CedarPolicyLSP {
     this.connection.sendDiagnostics({ uri, diagnostics });
   }
 
-  formatDocument(text: string): TextEdit[] {
+  async formatDocument(text: string): Promise<TextEdit[]> {
+    if (this.wasmPromise) await this.wasmPromise;
     const result = this.cedarWasm.formatPolicies({
       policyText: text,
       lineWidth: 80,

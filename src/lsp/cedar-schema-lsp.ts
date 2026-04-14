@@ -10,11 +10,17 @@ import { cedarErrorsToDiagnostics } from './diagnostics';
 
 export class CedarSchemaLSP {
   private cedarWasm!: CedarWasm;
+  private wasmPromise!: Promise<CedarWasm>;
 
   constructor(private connection: Connection) {}
 
   init(cedarWasm: CedarWasm): void {
     this.cedarWasm = cedarWasm;
+  }
+
+  initAsync(wasmPromise: Promise<CedarWasm>): void {
+    this.wasmPromise = wasmPromise;
+    wasmPromise.then((wasm) => { this.cedarWasm = wasm; });
   }
 
   setup(): void {
@@ -39,7 +45,8 @@ export class CedarSchemaLSP {
     this.connection.onCompletion(() => this.getCompletions());
   }
 
-  validateDocument(uri: string, text: string): void {
+  async validateDocument(uri: string, text: string): Promise<void> {
+    if (this.wasmPromise) await this.wasmPromise;
     const result = this.cedarWasm.checkParseSchema(text);
 
     if (result.type === 'failure') {
