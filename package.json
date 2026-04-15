@@ -1,12 +1,35 @@
 {
   "name": "cedar-monaco-editor",
   "version": "0.1.0",
+  "description": "React components for editing Cedar policies, schemas, and context using Monaco Editor",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/cedar-monaco-editor.js",
+  "module": "./dist/cedar-monaco-editor.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/cedar-monaco-editor.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cedar-policy/cedar-monaco-editor"
+  },
+  "keywords": [
+    "cedar",
+    "monaco",
+    "editor",
+    "react",
+    "policy",
+    "authorization"
   ],
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly",
@@ -15,12 +38,12 @@
   },
   "peerDependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "@monaco-editor/react": "^4.6.0",
+    "monaco-editor": "^0.52.0"
   },
   "dependencies": {
     "@cedar-policy/cedar-wasm": "^4.9.0",
-    "@monaco-editor/react": "^4.6.0",
-    "monaco-editor": "^0.52.0",
     "vscode-languageserver-protocol": "^3.17.0"
   },
   "devDependencies": {

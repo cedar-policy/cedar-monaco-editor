@@ -12,7 +12,7 @@ export default defineConfig({
       fileName: 'cedar-monaco-editor',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'monaco-editor'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'monaco-editor', '@monaco-editor/react'],
     },
   },
   worker: {
