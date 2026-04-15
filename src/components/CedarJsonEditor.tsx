@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { useJsonWorker } from './useJsonWorker';
+import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
 
 export interface CedarJsonEditorProps {
@@ -18,8 +19,6 @@ export interface CedarJsonEditorProps {
 
 const SEVERITY_MAP: Record<string, number> = { error: 8, warning: 4, info: 2 };
 
-const jsonWorkerUrl = new URL('../workers/cedar-json.worker.ts', import.meta.url);
-
 export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
   value,
   onChange,
@@ -31,7 +30,7 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
   height = '400px',
   options,
 }) => {
-  const { validate } = useJsonWorker(jsonWorkerUrl);
+  const { validate } = useJsonWorker(() => getConfig().jsonWorkerFactory!());
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
   const valueRef = useRef(value);

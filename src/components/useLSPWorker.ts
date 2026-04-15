@@ -11,6 +11,7 @@ import type {
   Diagnostic,
 } from 'vscode-languageserver-protocol';
 import type { CedarEditorDiagnostic } from '../types';
+import type { WorkerFactory } from '../config';
 
 const severityMap: Record<number, 'error' | 'warning' | 'info'> = {
   1: 'error',
@@ -38,7 +39,7 @@ function isNotification(msg: Message): msg is NotificationMessage {
   return 'method' in msg && !('id' in msg);
 }
 
-export function useLSPWorker(workerUrl: URL, languageId: string) {
+export function useLSPWorker(workerFactory: WorkerFactory, languageId: string) {
   const [diagnostics, setDiagnostics] = useState<CedarEditorDiagnostic[]>([]);
   const workerRef = useRef<Worker | null>(null);
   const writerRef = useRef<BrowserMessageWriter | null>(null);
@@ -84,7 +85,7 @@ export function useLSPWorker(workerUrl: URL, languageId: string) {
   }, [docUri, sendRequest]);
 
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: 'module' });
+    const worker = workerFactory();
     workerRef.current = worker;
 
     const reader = new BrowserMessageReader(worker);
@@ -126,7 +127,7 @@ export function useLSPWorker(workerUrl: URL, languageId: string) {
       writerRef.current = null;
       pendingRef.current.clear();
     };
-  }, [workerUrl, languageId]);
+  }, [workerFactory, languageId]);
 
   const dispose = useCallback(() => {
     workerRef.current?.terminate();

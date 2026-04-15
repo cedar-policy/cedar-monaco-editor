@@ -3,6 +3,7 @@ import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { registerCedarLanguages } from '../languages/register';
 import { useLSPWorker } from './useLSPWorker';
+import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
 
 export interface CedarPolicyEditorProps {
@@ -19,8 +20,6 @@ export interface CedarPolicyEditorProps {
 
 const SEVERITY_MAP: Record<string, number> = { error: 8, warning: 4, info: 2 };
 
-const workerUrl = new URL('../workers/cedar-policy.worker.ts', import.meta.url);
-
 export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
   value,
   onChange,
@@ -33,7 +32,7 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
   options,
 }) => {
   const { sendDidChange, sendDidOpen, sendNotification, diagnostics } =
-    useLSPWorker(workerUrl, 'cedar');
+    useLSPWorker(() => getConfig().policyWorkerFactory!(), 'cedar');
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
   const openedRef = useRef(false);

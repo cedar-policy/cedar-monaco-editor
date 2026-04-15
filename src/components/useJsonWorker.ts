@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { CedarEditorDiagnostic } from '../types';
 import type { ValidateRequest, ValidateResponse, InitResponse } from '../workers/cedar-json.protocol';
+import type { WorkerFactory } from '../config';
 
-export function useJsonWorker(workerUrl: URL) {
+export function useJsonWorker(workerFactory: WorkerFactory) {
   const workerRef = useRef<Worker | null>(null);
   const readyRef = useRef(false);
   const idRef = useRef(0);
@@ -11,7 +12,7 @@ export function useJsonWorker(workerUrl: URL) {
   const prevResolveRef = useRef<((value: CedarEditorDiagnostic[]) => void) | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: 'module' });
+    const worker = workerFactory();
     workerRef.current = worker;
 
     worker.onmessage = (e: MessageEvent<ValidateResponse | InitResponse>) => {

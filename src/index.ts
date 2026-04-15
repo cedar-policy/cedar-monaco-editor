@@ -3,6 +3,8 @@ export { CedarSchemaEditor } from './components/CedarSchemaEditor';
 export { CedarJsonEditor } from './components/CedarJsonEditor';
 export { useCedar } from './hooks/useCedar';
 export { registerCedarLanguages } from './languages/register';
+export { configureCedarEditors } from './config';
+export type { CedarMonacoConfig, WorkerFactory } from './config';
 export type { CedarEditorDiagnostic } from './types';
 export type { CedarPolicyEditorProps } from './components/CedarPolicyEditor';
 export type { CedarSchemaEditorProps } from './components/CedarSchemaEditor';
