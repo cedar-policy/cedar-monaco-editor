@@ -1,16 +1,21 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { useJsonWorker } from './useJsonWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
 
+export type CedarJsonEditorMode =
+  | { type: 'json' }
+  | { type: 'schema' }
+  | { type: 'entities' }
+  | { type: 'context'; action: { actionType: string; id: string } };
+
 export interface CedarJsonEditorProps {
   value: string;
   onChange?: (value: string) => void;
-  mode: 'json' | 'schema' | 'entities' | 'context';
+  mode: CedarJsonEditorMode;
   schema?: string;
-  action?: { type: string; id: string };
   onValidate?: (diagnostics: CedarEditorDiagnostic[]) => void;
   theme?: string;
   height?: string | number;
@@ -24,7 +29,6 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
   onChange,
   mode,
   schema,
-  action,
   onValidate,
   theme = 'vs',
   height = '400px',
@@ -56,9 +60,16 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
     }
   }, [onValidate]);
 
+  const actionType = mode.type === 'context' ? mode.action.actionType : undefined;
+  const actionId = mode.type === 'context' ? mode.action.id : undefined;
+  const action = useMemo(
+    () => actionType ? { type: actionType, id: actionId! } : undefined,
+    [actionType, actionId],
+  );
+
   const runValidation = useCallback((content: string) => {
-    validate(mode, content, schema, action).then(setMarkers);
-  }, [mode, schema, action, validate, setMarkers]);
+    validate(mode.type, content, schema, action).then(setMarkers);
+  }, [mode.type, schema, action, validate, setMarkers]);
 
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;

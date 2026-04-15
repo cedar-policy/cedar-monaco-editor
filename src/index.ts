@@ -8,5 +8,5 @@ export type { CedarMonacoConfig, WorkerFactory } from './config';
 export type { CedarEditorDiagnostic } from './types';
 export type { CedarPolicyEditorProps } from './components/CedarPolicyEditor';
 export type { CedarSchemaEditorProps } from './components/CedarSchemaEditor';
-export type { CedarJsonEditorProps } from './components/CedarJsonEditor';
+export type { CedarJsonEditorProps, CedarJsonEditorMode } from './components/CedarJsonEditor';
 export const VERSION = '0.1.0';

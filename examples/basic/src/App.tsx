@@ -166,7 +166,7 @@ export function App() {
           <CedarJsonEditor
             value={entities}
             onChange={setEntities}
-            mode="entities"
+            mode={{ type: 'entities' }}
             schema={schema}
             onValidate={setEntitiesDiags}
             height="400px"
@@ -180,7 +180,7 @@ export function App() {
           <CedarJsonEditor
             value={context}
             onChange={setContext}
-            mode="context"
+            mode={{ type: 'context', action: { actionType: 'App::Action', id: 'read' } }}
             schema={schema}
             onValidate={setContextDiags}
             height="400px"
