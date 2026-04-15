@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import type { CedarEditorDiagnostic } from '../types';
-import type { ValidateRequest, ValidateResponse, InitResponse } from '../workers/cedar-json.protocol';
+import type { ValidateRequest, ValidateResponse, InitResponse, ValidateMode } from '../workers/cedar-json.protocol';
 import type { WorkerFactory } from '../config';
 
 export function useJsonWorker(workerFactory: WorkerFactory) {
@@ -45,10 +45,10 @@ export function useJsonWorker(workerFactory: WorkerFactory) {
   }, []);
 
   const validateImmediate = useCallback(
-    (mode: ValidateRequest['mode'], content: string, schema?: string, action?: { type: string; id: string }): Promise<CedarEditorDiagnostic[]> => {
+    (mode: ValidateMode, content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
       if (!workerRef.current || !readyRef.current) return Promise.resolve([]);
       const id = ++idRef.current;
-      const msg: ValidateRequest = { type: 'validate', id, mode, content, schema, action };
+      const msg: ValidateRequest = { type: 'validate', id, mode, content, schema };
       return new Promise((resolve) => {
         pendingRef.current.set(id, resolve);
         workerRef.current!.postMessage(msg);
@@ -58,7 +58,7 @@ export function useJsonWorker(workerFactory: WorkerFactory) {
   );
 
   const validate = useCallback(
-    (mode: ValidateRequest['mode'], content: string, schema?: string, action?: { type: string; id: string }): Promise<CedarEditorDiagnostic[]> => {
+    (mode: ValidateMode, content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
       return new Promise((resolve) => {
         // Resolve previous pending promise with empty array
         if (prevResolveRef.current) {
@@ -69,7 +69,7 @@ export function useJsonWorker(workerFactory: WorkerFactory) {
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
           prevResolveRef.current = null;
-          validateImmediate(mode, content, schema, action).then(resolve);
+          validateImmediate(mode, content, schema).then(resolve);
         }, 300);
       });
     },

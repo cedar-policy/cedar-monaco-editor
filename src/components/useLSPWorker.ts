@@ -88,6 +88,10 @@ export function useLSPWorker(workerFactory: WorkerFactory, languageId: string) {
     const worker = workerFactory();
     workerRef.current = worker;
 
+    worker.onerror = (e) => {
+      console.error(`[cedar-lsp:${languageId}] Worker error:`, e);
+    };
+
     const reader = new BrowserMessageReader(worker);
     const writer = new BrowserMessageWriter(worker);
     writerRef.current = writer;

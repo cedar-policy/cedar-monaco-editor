@@ -62,14 +62,17 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
 
   const actionType = mode.type === 'context' ? mode.action.actionType : undefined;
   const actionId = mode.type === 'context' ? mode.action.id : undefined;
-  const action = useMemo(
-    () => actionType ? { type: actionType, id: actionId! } : undefined,
-    [actionType, actionId],
-  );
+
+  const validateMode = useMemo(() => {
+    if (mode.type === 'context') {
+      return { type: 'context' as const, action: { type: actionType!, id: actionId! } };
+    }
+    return { type: mode.type } as const;
+  }, [mode.type, actionType, actionId]);
 
   const runValidation = useCallback((content: string) => {
-    validate(mode.type, content, schema, action).then(setMarkers);
-  }, [mode.type, schema, action, validate, setMarkers]);
+    validate(validateMode, content, schema).then(setMarkers);
+  }, [validateMode, schema, validate, setMarkers]);
 
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;

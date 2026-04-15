@@ -1,12 +1,17 @@
 import type { CedarEditorDiagnostic } from '../types';
 
+export type ValidateMode =
+  | { type: 'json' }
+  | { type: 'schema' }
+  | { type: 'entities' }
+  | { type: 'context'; action: { type: string; id: string } };
+
 export interface ValidateRequest {
   type: 'validate';
   id: number;
-  mode: 'json' | 'schema' | 'entities' | 'context';
+  mode: ValidateMode;
   content: string;
   schema?: string;
-  action?: { type: string; id: string };
 }
 
 export interface ValidateResponse {

@@ -78,8 +78,15 @@ function jsonParseDiagnostic(e: unknown): CedarEditorDiagnostic[] {
 }
 
 function validateSchema(content: string): CedarEditorDiagnostic[] {
-  // checkParseSchema accepts a Schema which can be a JSON string
-  const result = cedarWasm!.checkParseSchema(content);
+  // Parse JSON first — if it fails, return the parse error
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    // JSON is invalid — let Monaco's built-in JSON validation handle it
+    return [];
+  }
+  const result = cedarWasm!.checkParseSchema(parsed as import('@cedar-policy/cedar-wasm').SchemaJson<string>);
   if (result.type === 'success') return [];
   return convertErrors(result.errors, content);
 }
@@ -103,12 +110,11 @@ function validateContext(content: string, schemaStr?: string, action?: { type: s
 }
 
 function handleValidate(msg: ValidateRequest): ValidateResponse {
-  const { id, mode, content, schema, action } = msg;
+  const { id, mode, content, schema } = msg;
   try {
     let diagnostics: CedarEditorDiagnostic[];
-    switch (mode) {
+    switch (mode.type) {
       case 'json':
-        // Monaco handles JSON syntax validation
         diagnostics = [];
         break;
       case 'schema':
@@ -118,7 +124,7 @@ function handleValidate(msg: ValidateRequest): ValidateResponse {
         diagnostics = validateEntities(content, schema);
         break;
       case 'context':
-        diagnostics = validateContext(content, schema, action);
+        diagnostics = validateContext(content, schema, mode.action);
         break;
     }
     return { type: 'validate-response', id, diagnostics };

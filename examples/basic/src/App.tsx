@@ -151,9 +151,10 @@ export function App() {
 
       {tab === 'schema' && (
         <>
-          <CedarSchemaEditor
+          <CedarJsonEditor
             value={schema}
             onChange={setSchema}
+            mode={{ type: 'schema' }}
             onValidate={setSchemaDiags}
             height="400px"
           />
