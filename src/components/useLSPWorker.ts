@@ -92,6 +92,10 @@ export function useLSPWorker(workerFactory: WorkerFactory, languageId: string) {
       console.error(`[cedar-lsp:${languageId}] Worker error:`, e);
     };
 
+    worker.addEventListener('message', (e) => {
+      console.log(`[cedar-lsp:${languageId}] raw message:`, e.data);
+    });
+
     const reader = new BrowserMessageReader(worker);
     const writer = new BrowserMessageWriter(worker);
     writerRef.current = writer;

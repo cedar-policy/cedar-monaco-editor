@@ -89,10 +89,12 @@ export class CedarPolicyLSP {
     const result = this.cedarWasm.checkParsePolicySet({
       staticPolicies: text,
     });
+    console.log('@@@@@validateDocument', uri, text, result, 'errors' in result ? result.errors.map(e => JSON.stringify(e)).join('|') : undefined);
 
     let diagnostics = result.type === 'failure'
       ? cedarErrorsToDiagnostics(result.errors, text)
       : [];
+    console.log('diag', diagnostics);
 
     this.connection.sendDiagnostics({ uri, diagnostics });
   }

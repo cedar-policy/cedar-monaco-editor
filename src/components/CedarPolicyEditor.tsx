@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { registerCedarLanguages } from '../languages/register';
-import { useLSPWorker } from './useLSPWorker';
+import { usePolicyWorker } from './usePolicyWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
 
@@ -11,8 +11,6 @@ export interface CedarPolicyEditorProps {
   onChange?: (value: string) => void;
   schema?: string;
   onValidate?: (diagnostics: CedarEditorDiagnostic[]) => void;
-  allowTemplates?: boolean;
-  allowMultiplePolicies?: boolean;
   theme?: string;
   height?: string | number;
   options?: Record<string, unknown>;
@@ -25,56 +23,24 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
   onChange,
   schema,
   onValidate,
-  allowTemplates,
-  allowMultiplePolicies,
   theme = 'vs',
   height = '400px',
   options,
 }) => {
-  const { sendDidChange, sendDidOpen, sendNotification, diagnostics } =
-    useLSPWorker(() => getConfig().policyWorkerFactory!(), 'cedar');
+  const { validate } = usePolicyWorker(() => getConfig().policyWorkerFactory!());
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
-  const openedRef = useRef(false);
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  const handleBeforeMount: BeforeMount = useCallback((monaco) => {
-    registerCedarLanguages(monaco);
-    monacoRef.current = monaco;
-  }, []);
-
-  const handleMount: OnMount = useCallback((ed) => {
-    editorRef.current = ed;
-    sendDidOpen(value);
-    openedRef.current = true;
-  }, [sendDidOpen, value]);
-
-  const handleChange = useCallback((v: string | undefined) => {
-    const text = v ?? '';
-    if (openedRef.current) sendDidChange(text);
-    onChange?.(text);
-  }, [sendDidChange, onChange]);
-
-  useEffect(() => {
-    if (schema !== undefined) {
-      sendNotification('cedar/updateSchema', { schema });
-    }
-  }, [schema, sendNotification]);
-
-  useEffect(() => {
-    sendNotification('cedar/updateConfig', {
-      allowTemplates: allowTemplates ?? false,
-      allowMultiplePolicies: allowMultiplePolicies ?? false,
-    });
-  }, [allowTemplates, allowMultiplePolicies, sendNotification]);
-
-  useEffect(() => {
+  const setMarkers = useCallback((diagnostics: CedarEditorDiagnostic[]) => {
     onValidate?.(diagnostics);
     const model = editorRef.current?.getModel();
     const monaco = monacoRef.current;
     if (model && monaco) {
       monaco.editor.setModelMarkers(
         model,
-        'cedar-lsp',
+        'cedar',
         diagnostics.map((d) => ({
           startLineNumber: d.startLineNumber,
           startColumn: d.startColumn,
@@ -85,7 +51,32 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
         })),
       );
     }
-  }, [diagnostics, onValidate]);
+  }, [onValidate]);
+
+  const runValidation = useCallback((content: string) => {
+    validate(content, schema).then(setMarkers);
+  }, [schema, validate, setMarkers]);
+
+  const handleBeforeMount: BeforeMount = useCallback((monaco) => {
+    registerCedarLanguages(monaco);
+    monacoRef.current = monaco;
+  }, []);
+
+  const handleMount: OnMount = useCallback((ed, monaco) => {
+    editorRef.current = ed;
+    monacoRef.current = monaco;
+    runValidation(value);
+  }, [runValidation, value]);
+
+  const handleChange = useCallback((v: string | undefined) => {
+    const text = v ?? '';
+    onChange?.(text);
+    runValidation(text);
+  }, [onChange, runValidation]);
+
+  useEffect(() => {
+    runValidation(valueRef.current);
+  }, [runValidation]);
 
   return (
     <Editor
