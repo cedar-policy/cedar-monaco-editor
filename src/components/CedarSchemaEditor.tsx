@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
+import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
-import { registerCedarLanguages } from '../languages/register';
-import { useLSPWorker } from './useLSPWorker';
+import { useSchemaWorker } from './useSchemaWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
 
@@ -25,36 +24,20 @@ export const CedarSchemaEditor: React.FC<CedarSchemaEditorProps> = ({
   height = '400px',
   options,
 }) => {
-  const { sendDidChange, sendDidOpen, diagnostics } = useLSPWorker(() => getConfig().schemaWorkerFactory!(), 'cedarschema');
+  const { validate } = useSchemaWorker(() => getConfig().schemaWorkerFactory!());
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
-  const openedRef = useRef(false);
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  const handleBeforeMount: BeforeMount = useCallback((monaco) => {
-    registerCedarLanguages(monaco);
-    monacoRef.current = monaco;
-  }, []);
-
-  const handleMount: OnMount = useCallback((ed) => {
-    editorRef.current = ed;
-    sendDidOpen(value);
-    openedRef.current = true;
-  }, [sendDidOpen, value]);
-
-  const handleChange = useCallback((v: string | undefined) => {
-    const text = v ?? '';
-    if (openedRef.current) sendDidChange(text);
-    onChange?.(text);
-  }, [sendDidChange, onChange]);
-
-  useEffect(() => {
+  const setMarkers = useCallback((diagnostics: CedarEditorDiagnostic[]) => {
     onValidate?.(diagnostics);
     const model = editorRef.current?.getModel();
     const monaco = monacoRef.current;
     if (model && monaco) {
       monaco.editor.setModelMarkers(
         model,
-        'cedar-lsp',
+        'cedar',
         diagnostics.map((d) => ({
           startLineNumber: d.startLineNumber,
           startColumn: d.startColumn,
@@ -65,15 +48,33 @@ export const CedarSchemaEditor: React.FC<CedarSchemaEditorProps> = ({
         })),
       );
     }
-  }, [diagnostics, onValidate]);
+  }, [onValidate]);
+
+  const runValidation = useCallback((content: string) => {
+    validate(content).then(setMarkers);
+  }, [validate, setMarkers]);
+
+  const handleMount: OnMount = useCallback((ed, monaco) => {
+    editorRef.current = ed;
+    monacoRef.current = monaco;
+    runValidation(value);
+  }, [runValidation, value]);
+
+  const handleChange = useCallback((v: string | undefined) => {
+    const text = v ?? '';
+    onChange?.(text);
+    runValidation(text);
+  }, [onChange, runValidation]);
+
+  useEffect(() => {
+    runValidation(valueRef.current);
+  }, [runValidation]);
 
   return (
     <Editor
       height={height}
-      language="cedarschema"
       theme={theme}
       value={value}
-      beforeMount={handleBeforeMount}
       onMount={handleMount}
       onChange={handleChange}
       options={options as editor.IStandaloneEditorConstructionOptions}
