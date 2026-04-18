@@ -1,4 +1,5 @@
 import { loader } from '@monaco-editor/react';
+import { registerCedarLanguages } from './languages/register';
 
 export type WorkerFactory = () => Worker;
 
@@ -15,6 +16,7 @@ export function configureCedarEditors(c: CedarMonacoConfig) {
   config = c;
   if (c.monaco) {
     loader.config({ monaco: c.monaco });
+    registerCedarLanguages(c.monaco);
   }
 }
 
