@@ -38,12 +38,53 @@ function convertErrors(
 }
 
 function handleValidate(msg: PolicyValidateRequest): PolicyValidateResponse {
+  if (!cedarWasm) {
+    console.error('cedar wasm not initialized!');
+    return{ type: 'validate-response', id: msg.id, diagnostics: [{ message: 'Cedar wasm not initialized', severity: 'error', startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 }] };
+  }
   try {
-    const result = cedarWasm!.checkParsePolicySet({ staticPolicies: msg.content });
-    const diagnostics: CedarEditorDiagnostic[] = result.type === 'failure'
-      ? convertErrors(result.errors, msg.content)
-      : [];
-    return { type: 'validate-response', id: msg.id, diagnostics };
+    // First check if the policy parses at all
+    const parseResult = cedarWasm.checkParsePolicySet({ staticPolicies: msg.content });
+    if (parseResult.type === 'failure') {
+      return { type: 'validate-response', id: msg.id, diagnostics: convertErrors(parseResult.errors, msg.content) };
+    }
+
+    // If schema provided, validate policies against it
+    if (msg.schema) {
+      let schema: import('@cedar-policy/cedar-wasm').Schema;
+      try {
+        schema = JSON.parse(msg.schema);
+      } catch {
+        schema = msg.schema;
+      }
+      const valResult = cedarWasm.validate({ schema, policies: { staticPolicies: msg.content } });
+      if (valResult.type === 'failure') {
+        return { type: 'validate-response', id: msg.id, diagnostics: convertErrors(valResult.errors, msg.content) };
+      }
+      if (valResult.validationErrors.length > 0) {
+        const diags = valResult.validationErrors.map((ve) => {
+          const loc = ve.error.sourceLocations?.[0];
+          if (loc) {
+            const start = offsetToPosition(msg.content, loc.start);
+            const end = offsetToPosition(msg.content, loc.end);
+            const help = ve.error.help ? `, ${ve.error.help}` : '';
+            const message = ve.error.message + help;
+            return {
+              message,
+              severity: 'error' as const,
+              startLineNumber: start.lineNumber,
+              startColumn: start.column,
+              endLineNumber: end.lineNumber,
+              endColumn: end.column
+            };
+          }
+          return { message: ve.error.message, severity: 'error' as const, startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 };
+        });
+        return { type: 'validate-response', id: msg.id, diagnostics: diags };
+      }
+    }
+
+    return { type: 'validate-response', id: msg.id, diagnostics: [] };
   } catch (e) {
     return { type: 'validate-response', id: msg.id, diagnostics: [{ message: String(e), severity: 'error', startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 }] };
   }

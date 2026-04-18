@@ -73,6 +73,7 @@ export const CedarSchemaEditor: React.FC<CedarSchemaEditorProps> = ({
   return (
     <Editor
       height={height}
+      language="cedarschema"
       theme={theme}
       value={value}
       onMount={handleMount}

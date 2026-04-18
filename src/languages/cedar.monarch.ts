@@ -1,7 +1,9 @@
 import type { languages } from 'monaco-editor';
 
 export const cedarLanguageConfig: languages.LanguageConfiguration = {
-  comments: { lineComment: '//' },
+  comments: {
+    lineComment: '//',
+  },
   brackets: [
     ['{', '}'],
     ['[', ']'],
@@ -22,53 +24,125 @@ export const cedarLanguageConfig: languages.LanguageConfiguration = {
 };
 
 export const cedarMonarchLanguage: languages.IMonarchLanguage = {
-  keywords: [
-    'permit', 'forbid', 'when', 'unless', 'if', 'then', 'else',
-    'in', 'has', 'like', 'is', 'true', 'false',
+  keywords: ['permit', 'forbid', 'when', 'unless', 'in', 'has', 'like', 'if', 'then', 'else', 'is'],
+
+  constants: ['principal', 'action', 'resource', 'context'],
+
+  booleans: ['true', 'false'],
+
+  functions: ['ip', 'decimal', 'datetime', 'duration'],
+
+  methods: [
+    'contains',
+    'containsAll',
+    'containsAny',
+    'isEmpty',
+    'getTag',
+    'hasTag',
+    'isIpv4',
+    'isIpv6',
+    'isLoopback',
+    'isMulticast',
+    'isInRange',
+    'lessThan',
+    'lessThanOrEqual',
+    'greaterThan',
+    'greaterThanOrEqual',
+    'offset',
+    'durationSince',
+    'toDate',
+    'toTime',
+    'toMilliseconds',
+    'toSeconds',
+    'toMinutes',
+    'toHours',
+    'toDays',
   ],
-  builtins: ['principal', 'action', 'resource', 'context'],
+
+  symbols: /[=!<>|&+\-*\/]+/,
 
   tokenizer: {
     root: [
-      // Line comments
+      // comments
       [/\/\/.*$/, 'comment'],
 
-      // Template slots
-      [/\?(principal|resource)/, 'variable'],
+      // annotations: @name(
+      [/@[_a-zA-Z][_a-zA-Z0-9]*(?=\()/, 'annotation'],
 
-      // Namespace separator
-      [/::/, 'delimiter'],
+      // ?principal, ?resource
+      [/\?(?:principal|resource)\b/, 'variable'],
 
-      // Identifiers, keywords, builtins
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@builtins': 'type.identifier',
-          '@default': 'identifier',
+      // method calls: .methodName(
+      [
+        /\.([a-zA-Z][a-zA-Z0-9]*)(?=\()/,
+        {
+          cases: {
+            '$1@methods': 'keyword.function',
+            '@default': 'identifier',
+          },
         },
-      }],
+      ],
 
-      // Numbers
-      [/\d+/, 'number'],
+      // extension functions: ip(, decimal(, datetime(, duration(
+      [
+        /[a-z][a-zA-Z0-9]*(?=\()/,
+        {
+          cases: {
+            '@functions': 'keyword.function',
+            '@default': 'identifier',
+          },
+        },
+      ],
 
-      // Strings
-      [/"/, 'string', '@string'],
+      // entity type references with :: before a string: Namespace::Type::
+      [
+        /[_a-zA-Z][_a-zA-Z0-9]*(?:::[_a-zA-Z][_a-zA-Z0-9]*)*(?=::(?="))/,
+        'type.identifier',
+      ],
 
-      // Operators
-      [/[=!<>]=?|&&|\|\|/, 'operator'],
-      [/!/, 'operator'],
+      // namespaced types: Namespace::Type
+      [
+        /[_a-zA-Z][_a-zA-Z0-9]*(?:::[_a-zA-Z][_a-zA-Z0-9]*)+/,
+        'type.identifier',
+      ],
 
-      // Delimiters
-      [/[{}()\[\],;.]/, 'delimiter'],
+      // identifiers, keywords, constants, booleans
+      [
+        /[_a-zA-Z][_a-zA-Z0-9]*/,
+        {
+          cases: {
+            '@keywords': 'keyword',
+            '@constants': 'variable',
+            '@booleans': 'constant',
+            '@default': 'identifier',
+          },
+        },
+      ],
 
-      // Whitespace
-      [/\s+/, 'white'],
+      // integers
+      [/[1-9][0-9]*|0/, 'number'],
+
+      // whitespace
+      [/[ \t\r\n]+/, ''],
+
+      // brackets
+      [/[{}()\[\]]/, '@brackets'],
+
+      // operators
+      [/@symbols/, 'operator'],
+
+      // strings
+      [/"([^"\\]|\\.)*$/, 'string.invalid'],
+      [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
+
+      // delimiters
+      [/[;,.]/, 'delimiter'],
     ],
 
     string: [
       [/[^\\"]+/, 'string'],
       [/\\./, 'string.escape'],
-      [/"/, 'string', '@pop'],
+      [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
     ],
   },
 };

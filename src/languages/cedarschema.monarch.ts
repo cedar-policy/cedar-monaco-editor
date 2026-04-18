@@ -1,7 +1,9 @@
 import type { languages } from 'monaco-editor';
 
 export const cedarSchemaLanguageConfig: languages.LanguageConfiguration = {
-  comments: { lineComment: '//' },
+  comments: {
+    lineComment: '//',
+  },
   brackets: [
     ['{', '}'],
     ['[', ']'],
@@ -22,45 +24,72 @@ export const cedarSchemaLanguageConfig: languages.LanguageConfiguration = {
 };
 
 export const cedarSchemaMonarchLanguage: languages.IMonarchLanguage = {
-  keywords: ['namespace', 'entity', 'action', 'type', 'in', 'appliesTo'],
-  scopeKeywords: ['principal', 'resource', 'context'],
-  typeKeywords: ['Bool', 'Long', 'String', 'Set', 'Record', 'Entity', 'Extension'],
+  keywords: ['namespace', 'type', 'entity', 'action', 'appliesTo', 'in', 'enum', 'tags'],
+
+  typeKeywords: ['Long', 'String', 'Bool', 'Set', 'Record', 'Entity', 'Extension'],
+
+  symbols: /[=:?<>]+/,
 
   tokenizer: {
     root: [
-      // Line comments
+      // comments
       [/\/\/.*$/, 'comment'],
 
-      // Namespace separator
-      [/::/, 'delimiter'],
+      // namespace path (e.g. My::Namespace::Path)
+      [
+        /[A-Z_a-z][A-Za-z0-9_]*(?:::[A-Z_a-z][A-Za-z0-9_]*)+/,
+        'entity.name.namespace',
+      ],
 
-      // Identifiers, keywords, scope keywords, type keywords
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@scopeKeywords': 'type.identifier',
-          '@typeKeywords': 'type',
-          '@default': 'identifier',
+      // properties (identifier followed by optional ? then : but not ::)
+      [/[_a-zA-Z][_a-zA-Z0-9]*(?=\??\s*:(?!:))/, 'variable.property'],
+
+      // identifiers and keywords
+      [
+        /[a-z_][A-Za-z0-9_]*/,
+        {
+          cases: {
+            '@keywords': 'keyword',
+            '@default': 'identifier',
+          },
         },
-      }],
+      ],
 
-      // Numbers
-      [/\d+/, 'number'],
+      // type identifiers (capitalized)
+      [
+        /[A-Z][A-Za-z0-9_]*/,
+        {
+          cases: {
+            '@typeKeywords': 'type.identifier',
+            '@default': 'type.identifier',
+          },
+        },
+      ],
 
-      // Strings
-      [/"/, 'string', '@string'],
+      // whitespace
+      [/[ \t\r\n]+/, ''],
 
-      // Delimiters
-      [/[{}()\[\],;.:]/, 'delimiter'],
+      // brackets
+      [/[{}()\[\]]/, '@brackets'],
 
-      // Whitespace
-      [/\s+/, 'white'],
+      // operators / symbols
+      [/@symbols/, 'operator'],
+
+      // optional marker
+      [/\?/, 'operator'],
+
+      // strings
+      [/"([^"\\]|\\.)*$/, 'string.invalid'],
+      [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
+
+      // delimiter
+      [/[;,.]/, 'delimiter'],
     ],
 
     string: [
       [/[^\\"]+/, 'string'],
       [/\\./, 'string.escape'],
-      [/"/, 'string', '@pop'],
+      [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
     ],
   },
 };
