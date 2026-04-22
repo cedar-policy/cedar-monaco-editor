@@ -8,11 +8,18 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      formats: ['es'],
-      fileName: 'cedar-monaco-editor',
+      formats: ['es', 'cjs'],
+      fileName: (format) => `cedar-monaco-editor.${format === 'es' ? 'js' : 'cjs'}`,
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'monaco-editor', '@monaco-editor/react'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'monaco-editor',
+        '@monaco-editor/react',
+        '@cedar-policy/cedar-wasm',
+      ],
     },
   },
   worker: {

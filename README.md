@@ -17,10 +17,26 @@ React components for editing [Cedar](https://www.cedarpolicy.com/) policies, sch
 ## Installation
 
 ```bash
-npm install cedar-monaco-editor monaco-editor
+npm install cedar-monaco-editor monaco-editor @monaco-editor/react @cedar-policy/cedar-wasm
 ```
 
-`react` and `react-dom` (^18.2.0) are required as peer dependencies.
+The following are required as peer dependencies:
+
+- `react` and `react-dom` (^18.2.0)
+- `monaco-editor` (^0.52.0)
+- `@monaco-editor/react` (^4.6.0)
+- `@cedar-policy/cedar-wasm` (^4.9.0)
+
+The Cedar WASM module is not bundled into this package so that it can be deduplicated by your bundler and so the package ships a CommonJS build. See [Bundler Configuration](#bundler-configuration) for the required WASM loader setup.
+
+## Module Formats
+
+This package ships both ESM (`.js`) and CommonJS (`.cjs`) builds, resolved automatically via the `exports` map:
+
+- `import { CedarPolicyEditor } from 'cedar-monaco-editor'` — ESM
+- `const { CedarPolicyEditor } = require('cedar-monaco-editor')` — CommonJS
+
+Note: `@cedar-policy/cedar-wasm` itself is ESM-only and uses top-level await. The `useCedar` hook loads it via dynamic `import()`, which works in both ESM and CommonJS consumer code at runtime, but your bundler must support WebAssembly and top-level await (see below).
 
 ## Quick Start
 
