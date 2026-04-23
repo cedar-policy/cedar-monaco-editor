@@ -3,8 +3,8 @@ import {
   CedarPolicyEditor,
   CedarSchemaEditor,
   CedarJsonEditor,
-} from 'cedar-monaco-editor';
-import type { CedarEditorDiagnostic } from 'cedar-monaco-editor';
+} from '@cedar-policy/cedar-monaco-editor';
+import type { CedarEditorDiagnostic } from '@cedar-policy/cedar-monaco-editor';
 import './App.css';
 
 const DEFAULT_POLICY = `permit(
