@@ -1,5 +1,5 @@
 {
-  "name": "cedar-monaco-editor",
+  "name": "@cedar-policy/cedar-monaco-editor",
   "version": "0.1.0",
   "description": "React components for editing Cedar policies, schemas, and context using Monaco Editor",
   "license": "Apache-2.0",
@@ -20,6 +20,14 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "sideEffects": false,
   "repository": {
     "type": "git",
