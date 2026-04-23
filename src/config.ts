@@ -1,5 +1,6 @@
 import { loader } from '@monaco-editor/react';
 import { registerCedarLanguages } from './languages/register';
+import { ensureCedarFormatProviderRegistered } from './languages/format-provider';
 
 export type WorkerFactory = () => Worker;
 
@@ -17,6 +18,7 @@ export function configureCedarEditors(c: CedarMonacoConfig) {
   if (c.monaco) {
     loader.config({ monaco: c.monaco });
     registerCedarLanguages(c.monaco);
+    ensureCedarFormatProviderRegistered(c.monaco);
   }
 }
 

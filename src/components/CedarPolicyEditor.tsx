@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { registerCedarLanguages } from '../languages/register';
+import { bindFormatterToModel } from '../languages/format-provider';
 import { usePolicyWorker } from './usePolicyWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
@@ -27,7 +28,7 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
   height = '400px',
   options,
 }) => {
-  const { validate } = usePolicyWorker(() => getConfig().policyWorkerFactory!());
+  const { validate, format } = usePolicyWorker(() => getConfig().policyWorkerFactory!());
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import('monaco-editor') | null>(null);
   const valueRef = useRef(value);
@@ -62,11 +63,18 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
     monacoRef.current = monaco;
   }, []);
 
+  const unbindFormatterRef = useRef<(() => void) | null>(null);
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;
     monacoRef.current = monaco;
+    const model = ed.getModel();
+    if (model) unbindFormatterRef.current = bindFormatterToModel(model, format);
     runValidation(value);
-  }, [runValidation, value]);
+  }, [runValidation, value, format]);
+
+  useEffect(() => () => {
+      unbindFormatterRef.current?.();
+  }, []);
 
   const handleChange = useCallback((v: string | undefined) => {
     const text = v ?? '';
