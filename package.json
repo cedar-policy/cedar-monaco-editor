@@ -24,10 +24,6 @@
     "access": "public",
     "provenance": true
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "sideEffects": false,
   "repository": {
     "type": "git",
