@@ -71,14 +71,13 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
     return { type: mode.type } as const;
   }, [mode.type, actionType, actionId]);
 
-  const schemaKey = typeof schema === 'string' ? schema : JSON.stringify(schema);
-  const schemaRef = useRef(schema);
-  schemaRef.current = schema;
+  const schemaKey = typeof schema === 'string' ? 'legacy' : (schema?.type || '');
+  const schemaValue = typeof schema === 'string' ? schema : (schema?.value || '');
 
   const runValidation = useCallback((content: string) => {
-    validate(validateMode, content, schemaRef.current).then(setMarkers);
+    validate(validateMode, content, schema).then(setMarkers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validateMode, schemaKey, validate, setMarkers]);
+  }, [validateMode, schemaKey, schemaValue, validate, setMarkers]);
 
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;

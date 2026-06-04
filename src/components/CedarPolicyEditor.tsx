@@ -55,14 +55,13 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
     }
   }, [onValidate]);
 
-  const schemaKey = typeof schema === 'string' ? schema : JSON.stringify(schema);
-  const schemaRef = useRef(schema);
-  schemaRef.current = schema;
+  const schemaKey = typeof schema === 'string' ? 'legacy' : (schema?.type || '');
+  const schemaValue = typeof schema === 'string' ? schema : (schema?.value || '');
 
   const runValidation = useCallback((content: string) => {
-    validate(content, schemaRef.current).then(setMarkers);
+    validate(content, schema).then(setMarkers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schemaKey, validate, setMarkers]);
+  }, [schemaKey, schemaValue, validate, setMarkers]);
 
   const handleBeforeMount: BeforeMount = useCallback((monaco) => {
     registerCedarLanguages(monaco);
