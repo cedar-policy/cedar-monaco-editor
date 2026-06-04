@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 import type { PolicyValidateRequest, PolicyValidateResponse, PolicyFormatResponse, InitResponse } from '../workers/cedar-policy.protocol';
 import type { WorkerFactory } from '../config';
 
@@ -43,7 +43,7 @@ export function usePolicyWorker(workerFactory: WorkerFactory) {
     };
   }, []);
 
-  const validateImmediate = useCallback((content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
+  const validateImmediate = useCallback((content: string, schema?: SchemaInput): Promise<CedarEditorDiagnostic[]> => {
     if (!workerRef.current || !readyRef.current) return Promise.resolve([]);
     const id = ++idRef.current;
     const msg: PolicyValidateRequest = { type: 'validate', id, content, schema };
@@ -53,7 +53,7 @@ export function usePolicyWorker(workerFactory: WorkerFactory) {
     });
   }, []);
 
-  const validate = useCallback((content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
+  const validate = useCallback((content: string, schema?: SchemaInput): Promise<CedarEditorDiagnostic[]> => {
     return new Promise((resolve) => {
       if (prevResolveRef.current) { prevResolveRef.current([]); }
       prevResolveRef.current = resolve;

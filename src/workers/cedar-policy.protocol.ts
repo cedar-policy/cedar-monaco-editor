@@ -1,10 +1,10 @@
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 
 export interface PolicyValidateRequest {
   type: 'validate';
   id: number;
   content: string;
-  schema?: string;
+  schema?: SchemaInput;
 }
 
 export interface PolicyValidateResponse {

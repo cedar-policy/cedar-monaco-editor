@@ -113,7 +113,7 @@ function JsonSchemaPage() {
       <EditorTabs tab={tab} setTab={setTab} />
       {tab === 'policy' && (
         <>
-          <CedarPolicyEditor value={policy} onChange={setPolicy} schema={schema} onValidate={setPolicyDiags} height="400px" />
+          <CedarPolicyEditor value={policy} onChange={setPolicy} schema={{ type: 'cedarJson', value: schema }} onValidate={setPolicyDiags} height="400px" />
           <DiagnosticsPanel diagnostics={policyDiags} />
         </>
       )}
@@ -125,13 +125,13 @@ function JsonSchemaPage() {
       )}
       {tab === 'entities' && (
         <>
-          <CedarJsonEditor value={entities} onChange={setEntities} mode={{ type: 'entities' }} schema={schema} onValidate={setEntitiesDiags} height="400px" />
+          <CedarJsonEditor value={entities} onChange={setEntities} mode={{ type: 'entities' }} schema={{ type: 'cedarJson', value: schema }} onValidate={setEntitiesDiags} height="400px" />
           <DiagnosticsPanel diagnostics={entitiesDiags} />
         </>
       )}
       {tab === 'context' && (
         <>
-          <CedarJsonEditor value={context} onChange={setContext} mode={{ type: 'context', action: { actionType: 'App::Action', id: 'read' } }} schema={schema} onValidate={setContextDiags} height="400px" />
+          <CedarJsonEditor value={context} onChange={setContext} mode={{ type: 'context', action: { actionType: 'App::Action', id: 'read' } }} schema={{ type: 'cedarJson', value: schema }} onValidate={setContextDiags} height="400px" />
           <DiagnosticsPanel diagnostics={contextDiags} />
         </>
       )}
@@ -155,7 +155,7 @@ function CedarSchemaPage() {
       <EditorTabs tab={tab} setTab={setTab} />
       {tab === 'policy' && (
         <>
-          <CedarPolicyEditor value={policy} onChange={setPolicy} onValidate={setPolicyDiags} height="400px" />
+          <CedarPolicyEditor value={policy} onChange={setPolicy} schema={{ type: 'cedarFormat', value: schema }} onValidate={setPolicyDiags} height="400px" />
           <DiagnosticsPanel diagnostics={policyDiags} />
         </>
       )}
@@ -167,13 +167,13 @@ function CedarSchemaPage() {
       )}
       {tab === 'entities' && (
         <>
-          <CedarJsonEditor value={entities} onChange={setEntities} mode={{ type: 'entities' }} onValidate={setEntitiesDiags} height="400px" />
+          <CedarJsonEditor value={entities} onChange={setEntities} mode={{ type: 'entities' }} schema={{ type: 'cedarFormat', value: schema }} onValidate={setEntitiesDiags} height="400px" />
           <DiagnosticsPanel diagnostics={entitiesDiags} />
         </>
       )}
       {tab === 'context' && (
         <>
-          <CedarJsonEditor value={context} onChange={setContext} mode={{ type: 'context', action: { actionType: 'App::Action', id: 'read' } }} onValidate={setContextDiags} height="400px" />
+          <CedarJsonEditor value={context} onChange={setContext} mode={{ type: 'context', action: { actionType: 'App::Action', id: 'read' } }} schema={{ type: 'cedarFormat', value: schema }} onValidate={setContextDiags} height="400px" />
           <DiagnosticsPanel diagnostics={contextDiags} />
         </>
       )}

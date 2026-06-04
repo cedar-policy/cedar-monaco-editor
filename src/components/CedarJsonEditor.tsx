@@ -4,6 +4,7 @@ import type { editor } from 'monaco-editor';
 import { useJsonWorker } from './useJsonWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
+import type { SchemaInput } from '../types';
 
 export type CedarJsonEditorMode =
   | { type: 'json' }
@@ -15,7 +16,7 @@ export interface CedarJsonEditorProps {
   value: string;
   onChange?: (value: string) => void;
   mode: CedarJsonEditorMode;
-  schema?: string;
+  schema?: SchemaInput;
   onValidate?: (diagnostics: CedarEditorDiagnostic[]) => void;
   theme?: string;
   height?: string | number;
@@ -70,9 +71,14 @@ export const CedarJsonEditor: React.FC<CedarJsonEditorProps> = ({
     return { type: mode.type } as const;
   }, [mode.type, actionType, actionId]);
 
+  const schemaKey = typeof schema === 'string' ? schema : JSON.stringify(schema);
+  const schemaRef = useRef(schema);
+  schemaRef.current = schema;
+
   const runValidation = useCallback((content: string) => {
-    validate(validateMode, content, schema).then(setMarkers);
-  }, [validateMode, schema, validate, setMarkers]);
+    validate(validateMode, content, schemaRef.current).then(setMarkers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validateMode, schemaKey, validate, setMarkers]);
 
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;
