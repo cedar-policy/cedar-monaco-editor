@@ -1,7 +1,8 @@
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 import type { CedarJsonWorkerMessage, ValidateRequest, ValidateResponse } from './cedar-json.protocol';
 
 type CedarWasm = typeof import('@cedar-policy/cedar-wasm');
+type Schema = import('@cedar-policy/cedar-wasm').Schema;
 
 // Worker global scope — postMessage and onmessage are available globally
 const ctx: {
@@ -91,20 +92,28 @@ function validateSchema(content: string): CedarEditorDiagnostic[] {
   return convertErrors(result.errors, content);
 }
 
-function validateEntities(content: string, schemaStr?: string): CedarEditorDiagnostic[] {
+function resolveSchema(schema?: SchemaInput): Schema | undefined {
+  if (!schema) return undefined;
+  if (typeof schema === 'string') return JSON.parse(schema);
+  if (schema.type === 'cedarFormat') return schema.value;
+  if (schema.type === 'cedarJson') return JSON.parse(schema.value);
+  return undefined;
+}
+
+function validateEntities(content: string, schema?: SchemaInput): CedarEditorDiagnostic[] {
   // Parse entities JSON to ensure it's valid
   const entities = JSON.parse(content);
-  const schema = schemaStr ? JSON.parse(schemaStr) : undefined;
-  const result = cedarWasm!.checkParseEntities({ entities, schema });
+  const resolved = resolveSchema(schema);
+  const result = cedarWasm!.checkParseEntities({ entities, schema: resolved });
   if (result.type === 'success') return [];
   return convertErrors(result.errors, content);
 }
 
-function validateContext(content: string, schemaStr?: string, action?: { type: string; id: string }): CedarEditorDiagnostic[] {
+function validateContext(content: string, schema?: SchemaInput, action?: { type: string; id: string }): CedarEditorDiagnostic[] {
   const context = JSON.parse(content);
-  const schema = schemaStr ? JSON.parse(schemaStr) : undefined;
+  const resolved = resolveSchema(schema);
   const actionUid = action ? { __entity: action } : undefined;
-  const result = cedarWasm!.checkParseContext({ context, schema, action: actionUid });
+  const result = cedarWasm!.checkParseContext({ context, schema: resolved, action: actionUid });
   if (result.type === 'success') return [];
   return convertErrors(result.errors, content);
 }

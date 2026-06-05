@@ -1,4 +1,4 @@
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 import type {
   CedarPolicyWorkerMessage,
   PolicyValidateRequest,
@@ -52,10 +52,13 @@ function handleValidate(msg: PolicyValidateRequest): PolicyValidateResponse {
     // If schema provided, validate policies against it
     if (msg.schema) {
       let schema: import('@cedar-policy/cedar-wasm').Schema;
-      try {
-        schema = JSON.parse(msg.schema);
-      } catch {
-        schema = msg.schema;
+      const input: SchemaInput = msg.schema;
+      if (typeof input === 'string') {
+        try { schema = JSON.parse(input); } catch { schema = input; }
+      } else if (input.type === 'cedarFormat') {
+        schema = input.value;
+      } else {
+        try { schema = JSON.parse(input.value); } catch { schema = input.value; }
       }
       const valResult = cedarWasm.validate({ schema, policies: { staticPolicies: msg.content } });
       if (valResult.type === 'failure') {

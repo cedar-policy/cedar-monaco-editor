@@ -1,4 +1,4 @@
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 
 export type ValidateMode =
   | { type: 'json' }
@@ -11,7 +11,7 @@ export interface ValidateRequest {
   id: number;
   mode: ValidateMode;
   content: string;
-  schema?: string;
+  schema?: SchemaInput;
 }
 
 export interface ValidateResponse {

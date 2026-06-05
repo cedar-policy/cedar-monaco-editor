@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { CedarEditorDiagnostic } from '../types';
+import type { CedarEditorDiagnostic, SchemaInput } from '../types';
 import type { ValidateRequest, ValidateResponse, InitResponse, ValidateMode } from '../workers/cedar-json.protocol';
 import type { WorkerFactory } from '../config';
 
@@ -45,7 +45,7 @@ export function useJsonWorker(workerFactory: WorkerFactory) {
   }, []);
 
   const validateImmediate = useCallback(
-    (mode: ValidateMode, content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
+    (mode: ValidateMode, content: string, schema?: SchemaInput): Promise<CedarEditorDiagnostic[]> => {
       if (!workerRef.current || !readyRef.current) return Promise.resolve([]);
       const id = ++idRef.current;
       const msg: ValidateRequest = { type: 'validate', id, mode, content, schema };
@@ -58,9 +58,8 @@ export function useJsonWorker(workerFactory: WorkerFactory) {
   );
 
   const validate = useCallback(
-    (mode: ValidateMode, content: string, schema?: string): Promise<CedarEditorDiagnostic[]> => {
+    (mode: ValidateMode, content: string, schema?: SchemaInput): Promise<CedarEditorDiagnostic[]> => {
       return new Promise((resolve) => {
-        // Resolve previous pending promise with empty array
         if (prevResolveRef.current) {
           prevResolveRef.current([]);
         }

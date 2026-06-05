@@ -6,11 +6,12 @@ import { bindFormatterToModel } from '../languages/format-provider';
 import { usePolicyWorker } from './usePolicyWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
+import type { SchemaInput } from '../types';
 
 export interface CedarPolicyEditorProps {
   value: string;
   onChange?: (value: string) => void;
-  schema?: string;
+  schema?: SchemaInput;
   onValidate?: (diagnostics: CedarEditorDiagnostic[]) => void;
   theme?: string;
   height?: string | number;
@@ -54,9 +55,13 @@ export const CedarPolicyEditor: React.FC<CedarPolicyEditorProps> = ({
     }
   }, [onValidate]);
 
+  const schemaKey = typeof schema === 'string' ? 'legacy' : (schema?.type || '');
+  const schemaValue = typeof schema === 'string' ? schema : (schema?.value || '');
+
   const runValidation = useCallback((content: string) => {
     validate(content, schema).then(setMarkers);
-  }, [schema, validate, setMarkers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaKey, schemaValue, validate, setMarkers]);
 
   const handleBeforeMount: BeforeMount = useCallback((monaco) => {
     registerCedarLanguages(monaco);
