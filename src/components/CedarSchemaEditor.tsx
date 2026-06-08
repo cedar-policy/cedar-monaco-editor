@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import Editor, { type OnMount } from '@monaco-editor/react';
+import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import { registerCedarLanguages } from '../languages/register';
 import { useSchemaWorker } from './useSchemaWorker';
 import { getConfig } from '../config';
 import type { CedarEditorDiagnostic } from '../types';
@@ -54,6 +55,11 @@ export const CedarSchemaEditor: React.FC<CedarSchemaEditorProps> = ({
     validate(content).then(setMarkers);
   }, [validate, setMarkers]);
 
+  const handleBeforeMount: BeforeMount = useCallback((monaco) => {
+    registerCedarLanguages(monaco);
+    monacoRef.current = monaco;
+  }, []);
+
   const handleMount: OnMount = useCallback((ed, monaco) => {
     editorRef.current = ed;
     monacoRef.current = monaco;
@@ -76,6 +82,7 @@ export const CedarSchemaEditor: React.FC<CedarSchemaEditorProps> = ({
       language="cedarschema"
       theme={theme}
       value={value}
+      beforeMount={handleBeforeMount}
       onMount={handleMount}
       onChange={handleChange}
       options={options as editor.IStandaloneEditorConstructionOptions}
